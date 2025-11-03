@@ -14,6 +14,133 @@ export type Database = {
   }
   public: {
     Tables: {
+      calendar_events: {
+        Row: {
+          all_day: boolean
+          category_id: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          end_time: string | null
+          family_id: string
+          id: string
+          location: string | null
+          start_time: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          all_day?: boolean
+          category_id?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_time?: string | null
+          family_id: string
+          id?: string
+          location?: string | null
+          start_time: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          all_day?: boolean
+          category_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_time?: string | null
+          family_id?: string
+          id?: string
+          location?: string | null
+          start_time?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "event_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_events_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "family_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_categories: {
+        Row: {
+          color: Database["public"]["Enums"]["event_category_color"]
+          created_at: string
+          family_id: string
+          icon: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          color?: Database["public"]["Enums"]["event_category_color"]
+          created_at?: string
+          family_id: string
+          icon?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          color?: Database["public"]["Enums"]["event_category_color"]
+          created_at?: string
+          family_id?: string
+          icon?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_categories_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "family_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_reminders: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          remind_at: string
+          sent: boolean
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          remind_at: string
+          sent?: boolean
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          remind_at?: string
+          sent?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_reminders_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       family_groups: {
         Row: {
           created_at: string
@@ -221,6 +348,13 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "member" | "child"
+      event_category_color:
+        | "blue"
+        | "green"
+        | "orange"
+        | "purple"
+        | "pink"
+        | "red"
       subscription_tier: "free" | "family" | "premium"
     }
     CompositeTypes: {
@@ -350,6 +484,14 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "member", "child"],
+      event_category_color: [
+        "blue",
+        "green",
+        "orange",
+        "purple",
+        "pink",
+        "red",
+      ],
       subscription_tier: ["free", "family", "premium"],
     },
   },
