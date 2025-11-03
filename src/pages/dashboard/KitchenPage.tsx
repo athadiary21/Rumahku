@@ -4,7 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useFamily } from '@/hooks/useFamily';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Utensils, Plus, ShoppingCart, Trash2, Edit } from 'lucide-react';
+import { Utensils, Plus, ShoppingCart, Trash2, Edit, ChefHat, Calendar } from 'lucide-react';
+import { RecipeDialog } from '@/components/recipes/RecipeDialog';
+import { MealPlanDialog } from '@/components/recipes/MealPlanDialog';
+import { format } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ShoppingListDialog } from '@/components/shopping/ShoppingListDialog';
@@ -31,6 +34,28 @@ const KitchenPage = () => {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [deleteListId, setDeleteListId] = useState<string | null>(null);
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
+
+  const { data: recipes = [] } = useQuery({
+    queryKey: ['recipes', family?.family_id],
+    queryFn: async () => {
+      if (!family?.family_id) return [];
+      const { data, error } = await supabase.from('recipes').select('*').eq('family_id', family.family_id).order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!family?.family_id,
+  });
+
+  const { data: mealPlans = [] } = useQuery({
+    queryKey: ['meal-plans', family?.family_id],
+    queryFn: async () => {
+      if (!family?.family_id) return [];
+      const { data, error } = await supabase.from('meal_plans').select('*, recipes(name)').eq('family_id', family.family_id).order('date', { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!family?.family_id,
+  });
 
   // Fetch shopping lists
   const { data: shoppingLists, isLoading } = useQuery({
@@ -81,6 +106,40 @@ const KitchenPage = () => {
   });
 
   // Delete list
+  const deleteRecipeMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('recipes')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['recipes'] });
+      toast({
+        title: 'Resep dihapus',
+        description: 'Resep berhasil dihapus',
+      });
+    },
+  });
+
+  const deleteMealPlanMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('meal_plans')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['meal-plans'] });
+      toast({
+        title: 'Meal plan dihapus',
+        description: 'Meal plan berhasil dihapus',
+      });
+    },
+  });
+
   const deleteListMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
@@ -144,9 +203,10 @@ const KitchenPage = () => {
       </div>
 
       <Tabs defaultValue="shopping" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="shopping">Daftar Belanja</TabsTrigger>
-          <TabsTrigger value="recipes">Resep & Menu</TabsTrigger>
+          <TabsTrigger value="recipes">Resep</TabsTrigger>
+          <TabsTrigger value="meal-plan">Meal Plan</TabsTrigger>
         </TabsList>
 
         <TabsContent value="shopping" className="space-y-4">
@@ -303,27 +363,37 @@ const KitchenPage = () => {
         </TabsContent>
 
         <TabsContent value="recipes" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Resep & Rencana Menu</CardTitle>
-                  <CardDescription>Rencanakan menu mingguan keluarga</CardDescription>
-                </div>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Tambah Resep
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                <Utensils className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Belum ada resep tersimpan</p>
-                <p className="text-sm mt-2">Tambahkan resep favorit keluarga Anda</p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="flex justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-semibold">Koleksi Resep</h3>
+            </div>
+            <RecipeDialog trigger={<Button><Plus className="h-4 w-4 mr-2" />Tambah Resep</Button>} />
+          </div>
+          {recipes.length === 0 ? (
+            <Card><CardContent className="py-12"><div className="text-center text-muted-foreground"><ChefHat className="h-12 w-12 mx-auto mb-4 opacity-50" /><p>Belum ada resep</p></div></CardContent></Card>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-4">
+              {recipes.map((r) => (
+                <Card key={r.id}><CardHeader><div className="flex justify-between"><div><CardTitle className="text-lg">{r.name}</CardTitle></div><div className="flex gap-1"><RecipeDialog recipe={r} trigger={<Button variant="ghost" size="icon"><Edit className="h-4 w-4" /></Button>} /><Button variant="ghost" size="icon" onClick={() => deleteRecipeMutation.mutate(r.id)}><Trash2 className="h-4 w-4" /></Button></div></div></CardHeader></Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="meal-plan" className="space-y-4">
+          <div className="flex justify-between mb-4">
+            <h3 className="text-lg font-semibold">Meal Plan</h3>
+            <MealPlanDialog trigger={<Button><Plus className="h-4 w-4 mr-2" />Tambah Plan</Button>} />
+          </div>
+          {mealPlans.length === 0 ? (
+            <Card><CardContent className="py-12"><div className="text-center text-muted-foreground"><Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" /><p>Belum ada meal plan</p></div></CardContent></Card>
+          ) : (
+            <div className="space-y-3">
+              {mealPlans.map((p) => (
+                <Card key={p.id}><CardHeader><div className="flex justify-between"><div><CardTitle className="text-lg">{format(new Date(p.date), 'dd MMM yyyy')} - {p.meal_type}</CardTitle>{p.recipes && <CardDescription>{p.recipes.name}</CardDescription>}</div><div className="flex gap-1"><MealPlanDialog mealPlan={p} trigger={<Button variant="ghost" size="icon"><Edit className="h-4 w-4" /></Button>} /><Button variant="ghost" size="icon" onClick={() => deleteMealPlanMutation.mutate(p.id)}><Trash2 className="h-4 w-4" /></Button></div></div></CardHeader></Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 
