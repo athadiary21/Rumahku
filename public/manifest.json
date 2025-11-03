@@ -1,0 +1,21 @@
+{
+  "name": "RumahKu - Sistem Operasi Keluarga",
+  "short_name": "RumahKu",
+  "description": "Kelola uang, jadwal, dan kebutuhan rumah tangga di satu tempat",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#37A89D",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "categories": ["lifestyle", "finance", "productivity"],
+  "lang": "id",
+  "dir": "ltr",
+  "scope": "/"
+}
