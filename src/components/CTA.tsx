@@ -1,9 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 
 const CTA = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   
   return (
     <section className="py-20 md:py-32 relative overflow-hidden">
@@ -17,7 +19,7 @@ const CTA = () => {
             {t("cta.description")}
           </p>
           <div className="flex justify-center">
-            <Button variant="hero" size="lg" className="group">
+            <Button variant="hero" size="lg" className="group" onClick={() => navigate('/auth')}>
               {t("cta.button1")}
               <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Button>

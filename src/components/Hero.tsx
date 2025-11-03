@@ -1,10 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useNavigate } from "react-router-dom";
 import heroImage from "@/assets/hero-family.jpg";
 import { ArrowRight } from "lucide-react";
 
 const Hero = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-secondary via-background to-background">
@@ -31,7 +33,7 @@ const Hero = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Button variant="hero" size="lg" className="group">
+              <Button variant="hero" size="lg" className="group" onClick={() => navigate('/auth')}>
                 {t("hero.cta1")}
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
