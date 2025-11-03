@@ -14,6 +14,91 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounts: {
+        Row: {
+          balance: number
+          color: string | null
+          created_at: string
+          currency: string
+          family_id: string
+          icon: string | null
+          id: string
+          name: string
+          type: Database["public"]["Enums"]["account_type"]
+          updated_at: string
+        }
+        Insert: {
+          balance?: number
+          color?: string | null
+          created_at?: string
+          currency?: string
+          family_id: string
+          icon?: string | null
+          id?: string
+          name: string
+          type: Database["public"]["Enums"]["account_type"]
+          updated_at?: string
+        }
+        Update: {
+          balance?: number
+          color?: string | null
+          created_at?: string
+          currency?: string
+          family_id?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          type?: Database["public"]["Enums"]["account_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounts_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "family_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      budget_categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          family_id: string
+          icon: string | null
+          id: string
+          monthly_limit: number | null
+          name: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          family_id: string
+          icon?: string | null
+          id?: string
+          monthly_limit?: number | null
+          name: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          family_id?: string
+          icon?: string | null
+          id?: string
+          monthly_limit?: number | null
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_categories_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "family_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_events: {
         Row: {
           all_day: boolean
@@ -190,6 +275,56 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "family_members_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "family_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_goals: {
+        Row: {
+          color: string | null
+          created_at: string
+          created_by: string
+          current_amount: number
+          deadline: string | null
+          family_id: string
+          icon: string | null
+          id: string
+          name: string
+          target_amount: number
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          created_by: string
+          current_amount?: number
+          deadline?: string | null
+          family_id: string
+          icon?: string | null
+          id?: string
+          name: string
+          target_amount: number
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          created_by?: string
+          current_amount?: number
+          deadline?: string | null
+          family_id?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          target_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_goals_family_id_fkey"
             columns: ["family_id"]
             isOneToOne: false
             referencedRelation: "family_groups"
@@ -481,6 +616,73 @@ export type Database = {
           },
         ]
       }
+      transactions: {
+        Row: {
+          account_id: string
+          amount: number
+          budget_category_id: string | null
+          created_at: string
+          created_by: string
+          date: string
+          description: string
+          family_id: string
+          id: string
+          notes: string | null
+          type: Database["public"]["Enums"]["transaction_type"]
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          amount: number
+          budget_category_id?: string | null
+          created_at?: string
+          created_by: string
+          date?: string
+          description: string
+          family_id: string
+          id?: string
+          notes?: string | null
+          type: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          amount?: number
+          budget_category_id?: string | null
+          created_at?: string
+          created_by?: string
+          date?: string
+          description?: string
+          family_id?: string
+          id?: string
+          notes?: string | null
+          type?: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_budget_category_id_fkey"
+            columns: ["budget_category_id"]
+            isOneToOne: false
+            referencedRelation: "budget_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "family_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -524,6 +726,7 @@ export type Database = {
       }
     }
     Enums: {
+      account_type: "bank" | "cash" | "ewallet" | "investment"
       app_role: "admin" | "member" | "child"
       event_category_color:
         | "blue"
@@ -533,6 +736,7 @@ export type Database = {
         | "pink"
         | "red"
       subscription_tier: "free" | "family" | "premium"
+      transaction_type: "income" | "expense" | "transfer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -660,6 +864,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_type: ["bank", "cash", "ewallet", "investment"],
       app_role: ["admin", "member", "child"],
       event_category_color: [
         "blue",
@@ -670,6 +875,7 @@ export const Constants = {
         "red",
       ],
       subscription_tier: ["free", "family", "premium"],
+      transaction_type: ["income", "expense", "transfer"],
     },
   },
 } as const
