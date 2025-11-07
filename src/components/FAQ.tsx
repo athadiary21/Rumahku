@@ -1,3 +1,5 @@
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Accordion,
@@ -5,18 +7,40 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Loader2 } from 'lucide-react';
 
 const FAQ = () => {
   const { t } = useLanguage();
   
-  const faqs = [
-    { q: "faq.q1", a: "faq.a1" },
-    { q: "faq.q2", a: "faq.a2" },
-    { q: "faq.q3", a: "faq.a3" },
-    { q: "faq.q4", a: "faq.a4" },
-    { q: "faq.q5", a: "faq.a5" },
-    { q: "faq.q6", a: "faq.a6" },
-  ];
+  const { data: faqs = [], isLoading } = useQuery({
+    queryKey: ['faqs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('faqs_admin')
+        .select('*')
+        .eq('is_active', true)
+        .order('order_index', { ascending: true });
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <section className="py-20 md:py-32">
+        <div className="container mx-auto px-4">
+          <div className="text-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (faqs.length === 0) {
+    return null;
+  }
 
   return (
     <section className="py-20 md:py-32">
@@ -33,12 +57,12 @@ const FAQ = () => {
         <div className="max-w-3xl mx-auto">
           <Accordion type="single" collapsible className="w-full">
             {faqs.map((faq, index) => (
-              <AccordionItem key={index} value={`item-${index}`}>
+              <AccordionItem key={faq.id} value={`item-${index}`}>
                 <AccordionTrigger className="text-left">
-                  {t(faq.q)}
+                  {faq.question}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground">
-                  {t(faq.a)}
+                  {faq.answer}
                 </AccordionContent>
               </AccordionItem>
             ))}
