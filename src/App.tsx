@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -22,6 +23,8 @@ import WebsiteContent from "./pages/admin/WebsiteContent";
 import TestimonialsAdmin from "./pages/admin/TestimonialsAdmin";
 import FAQsAdmin from "./pages/admin/FAQsAdmin";
 import PricingAdmin from "./pages/admin/PricingAdmin";
+import UsersManagement from "./pages/admin/UsersManagement";
+import SubscriptionsManagement from "./pages/admin/SubscriptionsManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,7 +32,8 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <LanguageProvider>
+      <SubscriptionProvider>
+        <LanguageProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
@@ -66,13 +70,16 @@ const App = () => (
                 <Route path="testimonials" element={<TestimonialsAdmin />} />
                 <Route path="faqs" element={<FAQsAdmin />} />
                 <Route path="pricing" element={<PricingAdmin />} />
+                <Route path="users" element={<UsersManagement />} />
+                <Route path="subscriptions" element={<SubscriptionsManagement />} />
               </Route>
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
-      </LanguageProvider>
+        </LanguageProvider>
+      </SubscriptionProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

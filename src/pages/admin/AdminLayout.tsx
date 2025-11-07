@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Settings, FileText, MessageSquare, HelpCircle, DollarSign, Home } from 'lucide-react';
+import { Settings, FileText, MessageSquare, HelpCircle, DollarSign, Home, Users, CreditCard } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 
 const AdminLayout = () => {
@@ -52,6 +52,8 @@ const AdminLayout = () => {
     { icon: MessageSquare, label: 'Testimonials', path: '/admin/testimonials' },
     { icon: HelpCircle, label: 'FAQs', path: '/admin/faqs' },
     { icon: DollarSign, label: 'Pricing', path: '/admin/pricing' },
+    { icon: Users, label: 'Users', path: '/admin/users' },
+    { icon: CreditCard, label: 'Subscriptions', path: '/admin/subscriptions' },
   ];
 
   return (

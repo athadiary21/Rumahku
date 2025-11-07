@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Settings, User, Bell, Shield, CreditCard } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
+import SubscriptionSettings from '@/components/SubscriptionSettings';
 
 const SettingsPage = () => {
   const { user } = useAuth();
@@ -80,21 +81,7 @@ const SettingsPage = () => {
         </TabsContent>
 
         <TabsContent value="subscription" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Paket Langganan</CardTitle>
-              <CardDescription>Kelola paket langganan Anda</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="p-4 border rounded-lg">
-                <h3 className="font-semibold text-lg mb-2">Free Plan</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Anda sedang menggunakan paket gratis
-                </p>
-                <Button>Upgrade ke Family</Button>
-              </div>
-            </CardContent>
-          </Card>
+          <SubscriptionSettings />
         </TabsContent>
       </Tabs>
     </div>

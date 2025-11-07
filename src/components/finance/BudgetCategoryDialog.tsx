@@ -5,8 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { useFamily } from '@/hooks/useFamily';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 
 interface BudgetCategoryDialogProps {
   category?: any;
@@ -22,6 +23,21 @@ export const BudgetCategoryDialog = ({ category, trigger }: BudgetCategoryDialog
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: familyData } = useFamily();
+  const { canAddBudgetCategory, tierData } = useSubscription();
+
+  const { data: categoriesCount = 0 } = useQuery({
+    queryKey: ['budget-categories-count', familyData?.family_id],
+    queryFn: async () => {
+      if (!familyData?.family_id) return 0;
+      const { count, error } = await supabase
+        .from('budget_categories')
+        .select('*', { count: 'exact', head: true })
+        .eq('family_id', familyData.family_id);
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!familyData?.family_id,
+  });
 
   const mutation = useMutation({
     mutationFn: async (data: any) => {
@@ -67,6 +83,17 @@ export const BudgetCategoryDialog = ({ category, trigger }: BudgetCategoryDialog
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check subscription limit for new categories
+    if (!category && !canAddBudgetCategory(categoriesCount)) {
+      toast({
+        title: 'Limit Tercapai',
+        description: `Paket ${tierData?.name} hanya dapat membuat ${tierData?.max_budget_categories} kategori budget. Upgrade paket untuk menambah lebih banyak kategori.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (!familyData?.family_id) {
       toast({
         title: 'Error',

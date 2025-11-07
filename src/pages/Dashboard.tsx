@@ -3,6 +3,7 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import SubscriptionBadge from '@/components/SubscriptionBadge';
 import { Button } from '@/components/ui/button';
 import { 
   Home, 
@@ -59,6 +60,9 @@ const Dashboard = () => {
       <div className="p-6 border-b">
         <h1 className="text-2xl font-bold text-primary">RumahKu</h1>
         <p className="text-sm text-muted-foreground mt-1">{user?.email}</p>
+        <div className="mt-2">
+          <SubscriptionBadge />
+        </div>
       </div>
       
       <nav className="flex-1 p-4 space-y-2">

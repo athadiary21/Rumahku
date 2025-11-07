@@ -8,6 +8,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useFamily } from '@/hooks/useFamily';
+import { useSubscription } from '@/contexts/SubscriptionContext';
+import { useQuery } from '@tanstack/react-query';
 
 interface AccountDialogProps {
   account?: any;
@@ -25,6 +27,21 @@ export const AccountDialog = ({ account, trigger }: AccountDialogProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: familyData } = useFamily();
+  const { canAddAccount, tierData } = useSubscription();
+
+  const { data: accountsCount = 0 } = useQuery({
+    queryKey: ['accounts-count', familyData?.family_id],
+    queryFn: async () => {
+      if (!familyData?.family_id) return 0;
+      const { count, error } = await supabase
+        .from('accounts')
+        .select('*', { count: 'exact', head: true })
+        .eq('family_id', familyData.family_id);
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!familyData?.family_id,
+  });
 
   const mutation = useMutation({
     mutationFn: async (data: any) => {
@@ -76,6 +93,16 @@ export const AccountDialog = ({ account, trigger }: AccountDialogProps) => {
       toast({
         title: 'Error',
         description: 'Family ID tidak ditemukan',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Check subscription limit for new accounts
+    if (!account && !canAddAccount(accountsCount)) {
+      toast({
+        title: 'Limit Tercapai',
+        description: `Paket ${tierData?.name} hanya dapat membuat ${tierData?.max_accounts} akun. Upgrade paket untuk menambah lebih banyak akun.`,
         variant: 'destructive',
       });
       return;
