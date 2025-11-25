@@ -29,6 +29,7 @@ import SubscriptionsManagement from "./pages/admin/SubscriptionsManagement";
 import PromoCodesAdmin from "./pages/admin/PromoCodesAdmin";
 import ActivityLogs from "./pages/admin/ActivityLogs";
 import TrafficLogs from "./pages/admin/TrafficLogs";
+import PaymentTransactions from "./pages/admin/PaymentTransactions";
 import NotFound from "./pages/NotFound";
 
 function PageTracker() {
@@ -85,6 +86,7 @@ const App = () => (
                 <Route path="promo-codes" element={<PromoCodesAdmin />} />
                 <Route path="activity-logs" element={<ActivityLogs />} />
                 <Route path="traffic-logs" element={<TrafficLogs />} />
+                <Route path="transactions" element={<PaymentTransactions />} />
               </Route>
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
