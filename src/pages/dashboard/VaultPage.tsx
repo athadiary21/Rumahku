@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useFamily } from '@/hooks/useFamily';
@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Shield, Plus, FileText, Download, Trash2, Loader2, File, FileImage, FileType } from 'lucide-react';
+import { Shield, Plus, FileText, Download, Trash2, Loader2, File, FileImage, FileType, Search, Eye, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 
@@ -25,6 +25,16 @@ const VaultPage = () => {
     category: 'lainnya',
     description: '',
   });
+  
+  // Search and filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'name'>('newest');
+  
+  // Preview states
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
+  const [previewDocument, setPreviewDocument] = useState<any>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
 
   // Fetch documents
   const { data: documents = [], isLoading } = useQuery({
@@ -43,6 +53,36 @@ const VaultPage = () => {
     },
     enabled: !!familyData?.family_id,
   });
+
+  // Filter and search documents
+  const filteredDocuments = useMemo(() => {
+    let filtered = [...documents];
+    
+    // Filter by category
+    if (filterCategory !== 'all') {
+      filtered = filtered.filter(d => d.category === filterCategory);
+    }
+    
+    // Search by name
+    if (searchQuery) {
+      filtered = filtered.filter(d => 
+        d.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    // Sort
+    filtered.sort((a, b) => {
+      if (sortBy === 'newest') {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      } else if (sortBy === 'oldest') {
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      } else {
+        return a.name.localeCompare(b.name);
+      }
+    });
+    
+    return filtered;
+  }, [documents, searchQuery, filterCategory, sortBy]);
 
   // Count by category
   const categoryCounts = {
@@ -196,6 +236,40 @@ const VaultPage = () => {
     }
   };
 
+  const handlePreview = async (doc: any) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('vault-documents')
+        .download(doc.file_path);
+
+      if (error) throw error;
+
+      const url = URL.createObjectURL(data);
+      setPreviewUrl(url);
+      setPreviewDocument(doc);
+      setPreviewDialogOpen(true);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Gagal membuka preview',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const closePreview = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewUrl('');
+    setPreviewDocument(null);
+    setPreviewDialogOpen(false);
+  };
+
+  const isPreviewable = (fileType: string) => {
+    return fileType?.startsWith('image/') || fileType === 'application/pdf';
+  };
+
   const getFileIcon = (fileType: string) => {
     if (fileType.startsWith('image/')) return FileImage;
     if (fileType === 'application/pdf') return FileType;
@@ -255,7 +329,11 @@ const VaultPage = () => {
           { key: 'kesehatan', label: 'Kesehatan' },
           { key: 'asuransi', label: 'Asuransi' },
         ].map((category) => (
-          <Card key={category.key}>
+          <Card 
+            key={category.key}
+            className="cursor-pointer hover:border-primary transition-colors"
+            onClick={() => setFilterCategory(filterCategory === category.key ? 'all' : category.key)}
+          >
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium">{category.label}</CardTitle>
             </CardHeader>
@@ -269,10 +347,52 @@ const VaultPage = () => {
         ))}
       </div>
 
+      {/* Search and Filter Bar */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Cari dokumen..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Select value={filterCategory} onValueChange={setFilterCategory}>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Semua Kategori" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Kategori</SelectItem>
+                <SelectItem value="properti">Properti</SelectItem>
+                <SelectItem value="pendidikan">Pendidikan</SelectItem>
+                <SelectItem value="kesehatan">Kesehatan</SelectItem>
+                <SelectItem value="asuransi">Asuransi</SelectItem>
+                <SelectItem value="lainnya">Lainnya</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Urutkan" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Terbaru</SelectItem>
+                <SelectItem value="oldest">Terlama</SelectItem>
+                <SelectItem value="name">Nama A-Z</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Dokumen Tersimpan</CardTitle>
-          <CardDescription>Semua dokumen penting keluarga Anda</CardDescription>
+          <CardDescription>
+            {filteredDocuments.length} dari {documents.length} dokumen
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -285,9 +405,15 @@ const VaultPage = () => {
               <p>Belum ada dokumen tersimpan</p>
               <p className="text-sm mt-2">Upload dokumen penting keluarga dengan aman</p>
             </div>
+          ) : filteredDocuments.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Tidak ada dokumen yang sesuai</p>
+              <p className="text-sm mt-2">Coba ubah filter atau kata kunci pencarian</p>
+            </div>
           ) : (
             <div className="space-y-3">
-              {documents.map((doc) => {
+              {filteredDocuments.map((doc) => {
                 return (
                   <div
                     key={doc.id}
@@ -308,6 +434,15 @@ const VaultPage = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
+                      {isPreviewable(doc.file_type) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePreview(doc)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
@@ -410,6 +545,55 @@ const VaultPage = () => {
               {uploadMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Upload
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Preview Dialog */}
+      <Dialog open={previewDialogOpen} onOpenChange={(open) => !open && closePreview()}>
+        <DialogContent className="max-w-4xl max-h-[90vh]">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle>{previewDocument?.name}</DialogTitle>
+                <DialogDescription>
+                  {previewDocument && getCategoryLabel(previewDocument.category)} • {' '}
+                  {previewDocument && new Date(previewDocument.created_at).toLocaleDateString('id-ID')}
+                </DialogDescription>
+              </div>
+              <Button variant="ghost" size="icon" onClick={closePreview}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-auto max-h-[calc(90vh-200px)]">
+            {previewDocument?.file_type?.startsWith('image/') ? (
+              <img 
+                src={previewUrl} 
+                alt={previewDocument?.name}
+                className="w-full h-auto rounded-lg"
+              />
+            ) : previewDocument?.file_type === 'application/pdf' ? (
+              <iframe
+                src={previewUrl}
+                className="w-full h-[600px] rounded-lg border"
+                title={previewDocument?.name}
+              />
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Preview tidak tersedia untuk tipe file ini</p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => previewDocument && handleDownload(previewDocument)}>
+              <Download className="h-4 w-4 mr-2" />
+              Download
+            </Button>
+            <Button onClick={closePreview}>Tutup</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
