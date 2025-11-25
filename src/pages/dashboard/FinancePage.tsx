@@ -1,22 +1,32 @@
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Wallet, Plus, TrendingUp, PiggyBank, Pencil, Trash2 } from 'lucide-react';
+import { Wallet, Plus, TrendingUp, PiggyBank, Pencil, Trash2, BarChart3 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { AccountDialog } from '@/components/finance/AccountDialog';
 import { BudgetCategoryDialog } from '@/components/finance/BudgetCategoryDialog';
 import { TransactionDialog } from '@/components/finance/TransactionDialog';
 import { FinancialGoalDialog } from '@/components/finance/FinancialGoalDialog';
+import { FinancialCharts } from '@/components/finance/FinancialCharts';
+import { TransactionFilters } from '@/components/finance/TransactionFilters';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useFamily } from '@/hooks/useFamily';
 import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
+import { format, isWithinInterval, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear } from 'date-fns';
 
 const FinancePage = () => {
   const { data: familyData } = useFamily();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [dateRange, setDateRange] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [amountFilter, setAmountFilter] = useState('all');
 
   const { data: accounts = [] } = useQuery({
     queryKey: ['accounts', familyData?.family_id],
@@ -133,6 +143,74 @@ const FinancePage = () => {
     .reduce((sum, t) => sum + Number(t.amount), 0);
   const totalGoalsAmount = financialGoals.reduce((sum, g) => sum + Number(g.current_amount), 0);
 
+  // Filtered transactions
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter(transaction => {
+      // Search filter
+      if (searchTerm && !transaction.description.toLowerCase().includes(searchTerm.toLowerCase())) {
+        return false;
+      }
+
+      // Date range filter
+      if (dateRange !== 'all') {
+        const transactionDate = new Date(transaction.date);
+        const now = new Date();
+        let range: { start: Date; end: Date } | null = null;
+
+        switch (dateRange) {
+          case 'today':
+            range = { start: startOfDay(now), end: endOfDay(now) };
+            break;
+          case 'week':
+            range = { start: startOfWeek(now, { weekStartsOn: 1 }), end: endOfWeek(now, { weekStartsOn: 1 }) };
+            break;
+          case 'month':
+            range = { start: startOfMonth(now), end: endOfMonth(now) };
+            break;
+          case '3months':
+            range = { start: startOfMonth(subMonths(now, 2)), end: endOfMonth(now) };
+            break;
+          case '6months':
+            range = { start: startOfMonth(subMonths(now, 5)), end: endOfMonth(now) };
+            break;
+          case 'year':
+            range = { start: startOfYear(now), end: endOfYear(now) };
+            break;
+        }
+
+        if (range && !isWithinInterval(transactionDate, range)) {
+          return false;
+        }
+      }
+
+      // Category filter
+      if (categoryFilter !== 'all') {
+        if (categoryFilter === 'none' && transaction.budget_category_id) {
+          return false;
+        }
+        if (categoryFilter !== 'none' && transaction.budget_category_id !== categoryFilter) {
+          return false;
+        }
+      }
+
+      // Type filter
+      if (typeFilter !== 'all' && transaction.type !== typeFilter) {
+        return false;
+      }
+
+      // Amount filter
+      if (amountFilter !== 'all') {
+        const [min, max] = amountFilter.split('-').map(Number);
+        const amount = Number(transaction.amount);
+        if (amount < min || amount > max) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [transactions, searchTerm, dateRange, categoryFilter, typeFilter, amountFilter]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -202,13 +280,24 @@ const FinancePage = () => {
         </Card>
       </div>
 
-      <Tabs defaultValue="budget" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs defaultValue="dashboard" className="w-full">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="dashboard">
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Dashboard
+          </TabsTrigger>
           <TabsTrigger value="budget">Budget</TabsTrigger>
           <TabsTrigger value="accounts">Akun</TabsTrigger>
           <TabsTrigger value="transactions">Transaksi</TabsTrigger>
           <TabsTrigger value="goals">Goals</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="dashboard" className="space-y-4">
+          <FinancialCharts 
+            transactions={transactions} 
+            budgetCategories={budgetCategories}
+          />
+        </TabsContent>
 
         <TabsContent value="budget" className="space-y-4">
           <div className="flex justify-between items-center">
@@ -360,21 +449,50 @@ const FinancePage = () => {
           <div className="flex justify-between items-center">
             <div>
               <h3 className="text-lg font-semibold">Riwayat Transaksi</h3>
-              <p className="text-sm text-muted-foreground">Semua transaksi keuangan keluarga</p>
+              <p className="text-sm text-muted-foreground">
+                {filteredTransactions.length} dari {transactions.length} transaksi
+              </p>
             </div>
           </div>
 
-          {transactions.length === 0 ? (
+          <TransactionFilters
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+            categoryFilter={categoryFilter}
+            onCategoryFilterChange={setCategoryFilter}
+            typeFilter={typeFilter}
+            onTypeFilterChange={setTypeFilter}
+            amountFilter={amountFilter}
+            onAmountFilterChange={setAmountFilter}
+            categories={budgetCategories}
+          />
+
+          {filteredTransactions.length === 0 ? (
             <Card>
               <CardContent className="py-12">
                 <div className="text-center text-muted-foreground">
-                  <p>Belum ada transaksi tercatat</p>
+                  <p>Tidak ada transaksi yang cocok dengan filter</p>
+                  <Button 
+                    variant="outline" 
+                    className="mt-4"
+                    onClick={() => {
+                      setSearchTerm('');
+                      setDateRange('all');
+                      setCategoryFilter('all');
+                      setTypeFilter('all');
+                      setAmountFilter('all');
+                    }}
+                  >
+                    Reset Filter
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           ) : (
             <div className="space-y-3">
-              {transactions.map((transaction) => (
+              {filteredTransactions.map((transaction) => (
                 <Card key={transaction.id}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
