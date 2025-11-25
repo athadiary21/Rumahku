@@ -194,6 +194,7 @@ export type Database = {
           category: string
           created_at: string | null
           description: string | null
+          expiry_date: string | null
           family_id: string
           file_path: string
           file_size: number | null
@@ -206,6 +207,7 @@ export type Database = {
           category: string
           created_at?: string | null
           description?: string | null
+          expiry_date?: string | null
           family_id: string
           file_path: string
           file_size?: number | null
@@ -218,6 +220,7 @@ export type Database = {
           category?: string
           created_at?: string | null
           description?: string | null
+          expiry_date?: string | null
           family_id?: string
           file_path?: string
           file_size?: number | null

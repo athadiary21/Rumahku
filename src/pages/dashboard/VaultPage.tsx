@@ -9,9 +9,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Shield, Plus, FileText, Download, Trash2, Loader2, File, FileImage, FileType, Search, Eye, X } from 'lucide-react';
+import { Shield, Plus, FileText, Download, Trash2, Loader2, File, FileImage, FileType, Search, Eye, X, CalendarIcon, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 const VaultPage = () => {
   const { data: familyData } = useFamily();
@@ -24,12 +29,13 @@ const VaultPage = () => {
     name: '',
     category: 'lainnya',
     description: '',
+    expiryDate: undefined as Date | undefined,
   });
   
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'name'>('newest');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'name' | 'expiry-asc' | 'expiry-desc'>('newest');
   
   // Preview states
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
@@ -54,6 +60,25 @@ const VaultPage = () => {
     enabled: !!familyData?.family_id,
   });
 
+  // Get expiry status helper
+  const getExpiryStatus = (expiryDate: string | null) => {
+    if (!expiryDate) return null;
+    
+    const today = new Date();
+    const expiry = new Date(expiryDate);
+    const daysUntilExpiry = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysUntilExpiry < 0) {
+      return { status: 'expired', label: 'Kedaluwarsa', variant: 'destructive' as const, days: Math.abs(daysUntilExpiry) };
+    } else if (daysUntilExpiry <= 30) {
+      return { status: 'expiring-soon', label: 'Segera Kedaluwarsa', variant: 'default' as const, days: daysUntilExpiry };
+    } else if (daysUntilExpiry <= 90) {
+      return { status: 'valid', label: 'Valid', variant: 'secondary' as const, days: daysUntilExpiry };
+    }
+    
+    return null;
+  };
+
   // Filter and search documents
   const filteredDocuments = useMemo(() => {
     let filtered = [...documents];
@@ -76,13 +101,32 @@ const VaultPage = () => {
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       } else if (sortBy === 'oldest') {
         return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-      } else {
+      } else if (sortBy === 'name') {
         return a.name.localeCompare(b.name);
+      } else if (sortBy === 'expiry-asc') {
+        if (!a.expiry_date) return 1;
+        if (!b.expiry_date) return -1;
+        return new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime();
+      } else if (sortBy === 'expiry-desc') {
+        if (!a.expiry_date) return 1;
+        if (!b.expiry_date) return -1;
+        return new Date(b.expiry_date).getTime() - new Date(a.expiry_date).getTime();
       }
+      return 0;
     });
     
     return filtered;
   }, [documents, searchQuery, filterCategory, sortBy]);
+
+  // Get expiring documents
+  const expiringDocuments = useMemo(() => {
+    if (!documents) return [];
+    return documents.filter((doc) => {
+      if (!doc.expiry_date) return false;
+      const status = getExpiryStatus(doc.expiry_date);
+      return status && (status.status === 'expired' || status.status === 'expiring-soon');
+    });
+  }, [documents]);
 
   // Count by category
   const categoryCounts = {
@@ -122,6 +166,7 @@ const VaultPage = () => {
           file_size: selectedFile.size,
           file_type: selectedFile.type,
           description: uploadData.description || null,
+          expiry_date: uploadData.expiryDate ? uploadData.expiryDate.toISOString().split('T')[0] : null,
         });
 
       if (insertError) throw insertError;
@@ -134,7 +179,7 @@ const VaultPage = () => {
       });
       setUploadDialogOpen(false);
       setSelectedFile(null);
-      setUploadData({ name: '', category: 'lainnya', description: '' });
+      setUploadData({ name: '', category: 'lainnya', description: '', expiryDate: undefined });
     },
     onError: (error: any) => {
       toast({
@@ -322,6 +367,15 @@ const VaultPage = () => {
         </Button>
       </div>
 
+      {expiringDocuments.length > 0 && (
+        <Alert className="border-orange-500/50 bg-orange-500/10">
+          <AlertCircle className="h-4 w-4 text-orange-500" />
+          <AlertDescription className="text-foreground">
+            <strong>{expiringDocuments.length}</strong> dokumen Anda akan segera kedaluwarsa atau sudah kedaluwarsa. Segera perpanjang!
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
           { key: 'properti', label: 'Properti' },
@@ -381,6 +435,8 @@ const VaultPage = () => {
                 <SelectItem value="newest">Terbaru</SelectItem>
                 <SelectItem value="oldest">Terlama</SelectItem>
                 <SelectItem value="name">Nama A-Z</SelectItem>
+                <SelectItem value="expiry-asc">Expiry Terdekat</SelectItem>
+                <SelectItem value="expiry-desc">Expiry Terjauh</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -422,14 +478,30 @@ const VaultPage = () => {
                     <div className="flex items-center gap-3 flex-1">
                       <FileText className="h-8 w-8 text-primary" />
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-medium truncate">{doc.name}</h3>
                           <Badge className={getCategoryColor(doc.category)}>
                             {getCategoryLabel(doc.category)}
                           </Badge>
+                          {doc.expiry_date && (() => {
+                            const status = getExpiryStatus(doc.expiry_date);
+                            if (status) {
+                              return (
+                                <Badge variant={status.variant} className="text-xs">
+                                  {status.status === 'expired' 
+                                    ? `Expired ${status.days} hari lalu`
+                                    : `${status.days} hari lagi`}
+                                </Badge>
+                              );
+                            }
+                            return null;
+                          })()}
                         </div>
                         <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
                           <span>{new Date(doc.created_at).toLocaleDateString('id-ID')}</span>
+                          {doc.expiry_date && (
+                            <span>• Expiry: {format(new Date(doc.expiry_date), "dd MMM yyyy")}</span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -534,6 +606,36 @@ const VaultPage = () => {
                 placeholder="Deskripsi dokumen"
                 rows={3}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Tanggal Kedaluwarsa (Opsional)</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !uploadData.expiryDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {uploadData.expiryDate ? format(uploadData.expiryDate, "PPP") : "Pilih tanggal"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={uploadData.expiryDate}
+                    onSelect={(date) => setUploadData({ ...uploadData, expiryDate: date })}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+              <p className="text-xs text-muted-foreground">
+                Untuk dokumen seperti passport, asuransi, atau sertifikat
+              </p>
             </div>
           </div>
 
