@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Settings, FileText, MessageSquare, HelpCircle, DollarSign, Home, Users, CreditCard, Tag, Activity, BarChart } from 'lucide-react';
+import { Settings, FileText, MessageSquare, HelpCircle, DollarSign, Home, Users, CreditCard, Tag, Activity, BarChart, Wallet } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 
 const AdminLayout = () => {
@@ -52,6 +52,7 @@ const AdminLayout = () => {
     { icon: Activity, label: 'Activity Logs', path: '/admin/activity-logs' },
     { icon: BarChart, label: 'Traffic Logs', path: '/admin/traffic-logs' },
     { icon: CreditCard, label: 'Subscriptions', path: '/admin/subscriptions' },
+    { icon: Wallet, label: 'Transactions', path: '/admin/transactions' },
     { icon: Tag, label: 'Promo Codes', path: '/admin/promo-codes' },
     { icon: FileText, label: 'Website Content', path: '/admin/content' },
     { icon: MessageSquare, label: 'Testimonials', path: '/admin/testimonials' },
