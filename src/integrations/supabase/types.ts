@@ -1061,9 +1061,72 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_update_subscription: {
+        Args: {
+          p_current_period_end: string
+          p_family_id: string
+          p_status: string
+          p_tier: string
+        }
+        Returns: Json
+      }
+      get_admin_users: {
+        Args: never
+        Returns: {
+          created_at: string
+          current_period_end: string
+          email: string
+          expires_at: string
+          family_id: string
+          family_name: string
+          full_name: string
+          id: string
+          role: string
+          subscription_status: string
+          subscription_tier: string
+          user_id: string
+        }[]
+      }
+      get_dashboard_stats: {
+        Args: never
+        Returns: {
+          active_promo_codes: number
+          active_subscriptions: number
+          completed_transactions: number
+          monthly_revenue: number
+          pending_transactions: number
+          total_users: number
+        }[]
+      }
       get_family_role: {
         Args: { _family_id: string; _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
+      }
+      get_promo_stats: {
+        Args: never
+        Returns: {
+          active_codes: number
+          expired_codes: number
+          total_codes: number
+          total_uses: number
+        }[]
+      }
+      get_revenue_trend: {
+        Args: { days_back?: number }
+        Returns: {
+          date: string
+          revenue: number
+        }[]
+      }
+      get_subscription_stats: {
+        Args: never
+        Returns: {
+          active_trials: number
+          churn_rate: number
+          expired_subscriptions: number
+          revenue_this_month: number
+          total_subscriptions: number
+        }[]
       }
       has_role: {
         Args: {
