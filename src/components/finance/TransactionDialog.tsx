@@ -121,7 +121,7 @@ export const TransactionDialog = ({ transaction, trigger }: TransactionDialogPro
       description,
       date,
       account_id: accountId,
-      budget_category_id: categoryId || null,
+      budget_category_id: categoryId === 'none' ? null : categoryId || null,
       notes: notes || null,
       family_id: familyData.family_id,
     });
@@ -201,12 +201,12 @@ export const TransactionDialog = ({ transaction, trigger }: TransactionDialogPro
 
           <div>
             <Label htmlFor="category">Kategori (Opsional)</Label>
-            <Select value={categoryId} onValueChange={setCategoryId}>
+            <Select value={categoryId || 'none'} onValueChange={setCategoryId}>
               <SelectTrigger>
                 <SelectValue placeholder="Pilih kategori" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tanpa Kategori</SelectItem>
+                <SelectItem value="none">Tanpa Kategori</SelectItem>
                 {categories?.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     {category.icon} {category.name}
