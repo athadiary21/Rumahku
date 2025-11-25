@@ -478,6 +478,84 @@ export type Database = {
           },
         ]
       }
+      payment_transactions: {
+        Row: {
+          amount: number
+          billing_period: string | null
+          created_at: string
+          currency: string
+          discount_amount: number | null
+          family_id: string | null
+          gateway_response: Json | null
+          gateway_transaction_id: string | null
+          id: string
+          metadata: Json | null
+          original_amount: number
+          paid_at: string | null
+          payment_method: string
+          promo_code_id: string | null
+          status: string
+          tier: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          billing_period?: string | null
+          created_at?: string
+          currency?: string
+          discount_amount?: number | null
+          family_id?: string | null
+          gateway_response?: Json | null
+          gateway_transaction_id?: string | null
+          id?: string
+          metadata?: Json | null
+          original_amount: number
+          paid_at?: string | null
+          payment_method: string
+          promo_code_id?: string | null
+          status?: string
+          tier: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          billing_period?: string | null
+          created_at?: string
+          currency?: string
+          discount_amount?: number | null
+          family_id?: string | null
+          gateway_response?: Json | null
+          gateway_transaction_id?: string | null
+          id?: string
+          metadata?: Json | null
+          original_amount?: number
+          paid_at?: string | null
+          payment_method?: string
+          promo_code_id?: string | null
+          status?: string
+          tier?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_transactions_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "family_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_transactions_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pricing_tiers_admin: {
         Row: {
           created_at: string
@@ -543,6 +621,58 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      promo_code_usage: {
+        Row: {
+          discount_amount: number
+          family_id: string | null
+          id: string
+          payment_transaction_id: string | null
+          promo_code_id: string
+          used_at: string
+          user_id: string
+        }
+        Insert: {
+          discount_amount: number
+          family_id?: string | null
+          id?: string
+          payment_transaction_id?: string | null
+          promo_code_id: string
+          used_at?: string
+          user_id: string
+        }
+        Update: {
+          discount_amount?: number
+          family_id?: string | null
+          id?: string
+          payment_transaction_id?: string | null
+          promo_code_id?: string
+          used_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_code_usage_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "family_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_code_usage_payment_transaction_id_fkey"
+            columns: ["payment_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "payment_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_code_usage_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       promo_codes: {
         Row: {
@@ -1102,6 +1232,17 @@ export type Database = {
         Args: { _family_id: string; _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      get_payment_stats: {
+        Args: { days_back?: number }
+        Returns: {
+          average_transaction: number
+          completed_transactions: number
+          failed_transactions: number
+          pending_transactions: number
+          total_revenue: number
+          total_transactions: number
+        }[]
+      }
       get_promo_stats: {
         Args: never
         Returns: {
@@ -1135,6 +1276,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_promo_usage: { Args: { promo_id: string }; Returns: undefined }
       is_family_member: {
         Args: { _family_id: string; _user_id: string }
         Returns: boolean
