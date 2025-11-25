@@ -230,7 +230,7 @@ const Install = () => {
             <p className="text-sm text-muted-foreground">
               {t("install.needHelp")}{" "}
               <a 
-                href="https://wa.me/6281234567890" 
+                href="https://wa.me/6282241590417" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"

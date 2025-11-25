@@ -19,7 +19,7 @@ const WhatsAppButton = () => {
   }, []);
 
   const handleClick = () => {
-    window.open("https://wa.me/6281234567890", "_blank");
+    window.open("https://wa.me/6282241590417", "_blank");
   };
 
   return (
