@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Wallet, Plus, TrendingUp, PiggyBank, Pencil, Trash2, BarChart3 } from 'lucide-react';
+import { Wallet, Plus, TrendingUp, PiggyBank, Pencil, Trash2, BarChart3, AlertTriangle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AccountDialog } from '@/components/finance/AccountDialog';
 import { BudgetCategoryDialog } from '@/components/finance/BudgetCategoryDialog';
 import { TransactionDialog } from '@/components/finance/TransactionDialog';
@@ -142,6 +143,9 @@ const FinancePage = () => {
     .filter(t => t.type === 'expense' && new Date(t.date).getMonth() === new Date().getMonth())
     .reduce((sum, t) => sum + Number(t.amount), 0);
   const totalGoalsAmount = financialGoals.reduce((sum, g) => sum + Number(g.current_amount), 0);
+  
+  // Check for low balance accounts (below 10,000)
+  const lowBalanceAccounts = accounts.filter(acc => Number(acc.balance) < 10000 && Number(acc.balance) > 0);
 
   // Filtered transactions
   const filteredTransactions = useMemo(() => {
@@ -232,6 +236,24 @@ const FinancePage = () => {
           }
         />
       </div>
+
+      {lowBalanceAccounts.length > 0 && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Peringatan Saldo Rendah!</AlertTitle>
+          <AlertDescription>
+            {lowBalanceAccounts.length === 1 ? (
+              <span>
+                Akun <strong>{lowBalanceAccounts[0].name}</strong> memiliki saldo di bawah Rp 10.000 (Rp {Number(lowBalanceAccounts[0].balance).toLocaleString('id-ID')})
+              </span>
+            ) : (
+              <span>
+                {lowBalanceAccounts.length} akun memiliki saldo di bawah Rp 10.000: {lowBalanceAccounts.map(acc => acc.name).join(', ')}
+              </span>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
