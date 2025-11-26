@@ -120,32 +120,42 @@ const UsersManagement = () => {
     setEditDialogOpen(true);
   };
 
-  const handleSaveChanges = () => {
+   const handleSaveEdit = () => {
     if (!editingUser) return;
+
+    // Convert date string to ISO timestamp
+    const expiresAtTimestamp = newExpiresAt 
+      ? new Date(newExpiresAt).toISOString() 
+      : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(); // Default 1 year from now
 
     updateSubscriptionMutation.mutate({
       familyId: editingUser.family_id,
       tier: newTier,
       status: newStatus,
-      expiresAt: newExpiresAt,
+      expiresAt: expiresAtTimestamp,
     });
   };
 
   const handleBulkUpdate = () => {
     if (selectedUsers.size === 0) {
       toast({
-        title: 'Error',
-        description: 'Please select at least one user',
+        title: 'No users selected',
+        description: 'Please select at least one user to update.',
         variant: 'destructive',
       });
       return;
     }
 
+    // Convert date string to ISO timestamp
+    const expiresAtTimestamp = bulkExpiresAt 
+      ? new Date(bulkExpiresAt).toISOString() 
+      : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(); // Default 1 year from now
+
     bulkUpdateMutation.mutate({
       userIds: Array.from(selectedUsers),
       tier: bulkTier,
       status: bulkStatus,
-      expiresAt: bulkExpiresAt,
+      expiresAt: expiresAtTimestamp,
     });
   };
 
