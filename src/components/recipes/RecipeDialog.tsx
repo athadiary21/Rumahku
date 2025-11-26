@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useFamily } from '@/hooks/useFamily';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface RecipeDialogProps {
   recipe?: any;
@@ -26,6 +27,7 @@ export const RecipeDialog = ({ recipe, trigger }: RecipeDialogProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: familyData } = useFamily();
+  const { user } = useAuth();
 
   const mutation = useMutation({
     mutationFn: async (data: any) => {
@@ -83,9 +85,18 @@ export const RecipeDialog = ({ recipe, trigger }: RecipeDialogProps) => {
       return;
     }
 
+    if (!user?.id && !recipe) {
+      toast({
+        title: 'Error',
+        description: 'User tidak terautentikasi',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const ingredientsArray = ingredients.split('\n').filter(i => i.trim());
 
-    mutation.mutate({
+    const data: any = {
       name,
       description: description || null,
       ingredients: ingredientsArray,
@@ -94,7 +105,13 @@ export const RecipeDialog = ({ recipe, trigger }: RecipeDialogProps) => {
       cook_time: cookTime ? parseInt(cookTime) : null,
       servings: servings ? parseInt(servings) : null,
       family_id: familyData.family_id,
-    });
+    };
+
+    if (!recipe) {
+      data.created_by = user.id;
+    }
+
+    mutation.mutate(data);
   };
 
   return (
