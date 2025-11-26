@@ -69,10 +69,33 @@ export const TransactionDialog = ({ transaction, trigger }: TransactionDialogPro
           .eq('id', transaction.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase
+        // Insert transaction
+        const { error: insertError } = await supabase
           .from('transactions')
           .insert([data]);
-        if (error) throw error;
+        if (insertError) throw insertError;
+
+        // Update account balance
+        const { data: accountData, error: accountError } = await supabase
+          .from('accounts')
+          .select('balance')
+          .eq('id', data.account_id)
+          .single();
+
+        if (accountError) throw accountError;
+
+        const currentBalance = parseFloat(accountData.balance);
+        const amount = parseFloat(data.amount);
+        const newBalance = data.type === 'income' 
+          ? currentBalance + amount 
+          : currentBalance - amount;
+
+        const { error: updateError } = await supabase
+          .from('accounts')
+          .update({ balance: newBalance })
+          .eq('id', data.account_id);
+
+        if (updateError) throw updateError;
       }
     },
     onSuccess: () => {
