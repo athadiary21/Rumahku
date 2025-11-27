@@ -1,73 +1,81 @@
-# Welcome to your Lovable project
+🏡 RumahKu — Sistem Operasi Keluarga
+Elegan • Terstruktur • Siap untuk Kolaborasi
+Repository: https://github.com/athadiary21/Rumahku
 
-## Project info
+✨ Ringkasan Singkat
+RumahKu adalah aplikasi web modern yang berfungsi sebagai Sistem Operasi Keluarga — tempat mengelola jadwal, aktivitas, catatan, dan kebutuhan rumah tangga dalam satu platform rapi dan mudah digunakan.
 
-**URL**: https://lovable.dev/projects/49ac2135-d151-4931-874f-1470058e5d50
+🧩 Tech Stack
+Frontend: Next.js / React
+Backend / Database: Supabase
+Auth: Supabase Auth + Google OAuth
+Styling: TailwindCSS (opsional)
 
-## How can I edit this code?
+📁 Struktur Proyek
+/public             → aset statis
+/src
+  /components       → komponen UI
+  /pages atau /app  → routing (Next.js)
+  /styles           → stylesheet
 
-There are several ways of editing your application.
+Jika ingin dibuat versi struktur asli berdasarkan repo-mu, cukup beri tahu saya.
 
-**Use Lovable**
+🛠️ Cara Menjalankan Secara Lokal
+# clone repo
+git clone https://github.com/athadiary21/Rumahku
+cd Rumahku
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/49ac2135-d151-4931-874f-1470058e5d50) and start prompting.
+# install dependencies
+npm install
 
-Changes made via Lovable will be committed automatically to this repo.
+# buat file .env.local lalu isi:
+NEXT_PUBLIC_SUPABASE_URL=your_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=xxxx
+GOOGLE_CLIENT_SECRET=yyyy
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# jalankan development
 npm run dev
-```
+Akses lokal:
+http://localhost:3000
 
-**Edit a file directly in GitHub**
+🔐 Catatan Google OAuth
+Pastikan redirect URL berikut didaftarkan di Google Cloud Console:
+Development
+http://localhost:3000/api/auth/callback/google
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+(Jika suatu saat kamu menambah domain produksi, tinggal ditambahkan ke daftar.)
 
-**Use GitHub Codespaces**
+🛡️ Checklist Keamanan & Kualitas
+ Audit dependency (npm audit)
+ Pastikan .env tidak ikut ter-commit
+ Gunakan Supabase RLS (Row Level Security)
+ Tambahkan validasi input pada form
+ Tambahkan schema validation (Zod / Yup)
+ Tambahkan linting & formatting (ESLint + Prettier)
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+📌 TODO Utama
+Integrasi Google Sign-In sepenuhnya
+Membuat dashboard UI
+Implementasi modul Aktivitas Keluarga
+Koneksi ke database Supabase (Realtime / CRUD)
+Menambahkan sistem traffic log / activity log user
+Menambahkan dokumentasi API (opsional)
 
-## What technologies are used for this project?
+🧯 Troubleshooting
+Login Error: 400 redirect_uri_mismatch
+Pastikan URL redirect sudah benar dan terdaftar.
+404 pada aset atau gambar
+Periksa folder /public
+Pastikan nama file case-sensitive
+Error SSR atau komponen tidak dirender
+Cek console di browser & terminal
+Pastikan tidak ada import yang salah path
 
-This project is built with:
+📦 License
+MIT (opsional)
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+👤 Kontak Developer
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/49ac2135-d151-4931-874f-1470058e5d50) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Dibuat oleh Atha
+Jika butuh bantuan coding, arsitektur, database, atau UI—tinggal panggil saya 😊
