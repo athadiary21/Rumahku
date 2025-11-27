@@ -19,7 +19,7 @@ const Pricing = () => {
     {
       tier: "free",
       nameKey: "pricing.starter.name",
-      price: language === "id" ? Gratis : "Free",
+      price: language === "id" ? 0 : "Free",
       descKey: "pricing.starter.desc",
       featureKeys: [
         "pricing.starter.feature1",
