@@ -19,7 +19,7 @@ const Pricing = () => {
     {
       tier: "free",
       nameKey: "pricing.starter.name",
-      price: language === "id" ? 0 : "Free",
+      price: language === "id" ? Gratis : "Free",
       descKey: "pricing.starter.desc",
       featureKeys: [
         "pricing.starter.feature1",
@@ -29,12 +29,12 @@ const Pricing = () => {
         "pricing.starter.feature5",
       ],
       ctaKey: "pricing.starter.cta",
-      highlighted: false,
+      highlighted: true,
     },
     {
       tier: "family",
       nameKey: "pricing.family.name",
-      price: language === "id" ? formatPrice(20000) : "$5",
+      price: language === "id" ? formatPrice(50000) : "$10",
       descKey: "pricing.family.desc",
       featureKeys: [
         "pricing.family.feature1",
@@ -45,7 +45,7 @@ const Pricing = () => {
         "pricing.family.feature6",
       ],
       ctaKey: "pricing.family.cta",
-      highlighted: true,
+      highlighted: false,
     },
     {
       tier: "premium",
