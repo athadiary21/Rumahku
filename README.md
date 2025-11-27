@@ -30,8 +30,11 @@ npm install
 
 # buat file .env.local lalu isi:
 NEXT_PUBLIC_SUPABASE_URL=your_url
+
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key
+
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=xxxx
+
 GOOGLE_CLIENT_SECRET=yyyy
 
 # jalankan development
