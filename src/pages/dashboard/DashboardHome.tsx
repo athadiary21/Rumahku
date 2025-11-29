@@ -60,7 +60,7 @@ const DashboardHome = () => {
     queryFn: async () => {
       if (!familyData?.family_id) return 0;
       const { count, error } = await supabase
-        .from('vault_documents')
+        .from('documents')
         .select('*', { count: 'exact', head: true })
         .eq('family_id', familyData.family_id);
       if (error) throw error;
