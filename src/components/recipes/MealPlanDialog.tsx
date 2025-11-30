@@ -31,7 +31,7 @@ export const MealPlanDialog = ({ mealPlan, trigger }: MealPlanDialogProps) => {
 
   const [date, setDate] = useState(mealPlan?.date ? formatToInputDate(mealPlan.date) : format(new Date(), 'yyyy-MM-dd'));
   const [mealType, setMealType] = useState(mealPlan?.meal_type || 'breakfast');
-  const [recipeId, setRecipeId] = useState(mealPlan?.recipe_id ? String(mealPlan.recipe_id) : '');
+  const [recipeId, setRecipeId] = useState(mealPlan?.recipe_id ? String(mealPlan.recipe_id) : '__none__');
   const [notes, setNotes] = useState(mealPlan?.notes || '');
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -89,7 +89,7 @@ export const MealPlanDialog = ({ mealPlan, trigger }: MealPlanDialogProps) => {
     if (!mealPlan) {
       setDate(format(new Date(), 'yyyy-MM-dd'));
       setMealType('breakfast');
-      setRecipeId('');
+      setRecipeId('__none__');
       setNotes('');
     }
   };
@@ -127,7 +127,7 @@ export const MealPlanDialog = ({ mealPlan, trigger }: MealPlanDialogProps) => {
 
     // Validasi recipeId (harus UUID string atau null)
     let recipeIdValue: string | null = null;
-    if (recipeId && recipeId !== '') {
+    if (recipeId && recipeId !== '' && recipeId !== '__none__') {
       recipeIdValue = recipeId;
     }
 
@@ -184,7 +184,7 @@ export const MealPlanDialog = ({ mealPlan, trigger }: MealPlanDialogProps) => {
                 <SelectValue placeholder="Pilih resep" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tanpa Resep</SelectItem>
+                <SelectItem value="__none__">Tanpa Resep</SelectItem>
                 {recipes?.map((recipe) => (
                   <SelectItem key={recipe.id} value={String(recipe.id)}>
                     {recipe.name}
