@@ -218,8 +218,8 @@ export const MealPlanDialog = ({ mealPlan, trigger }: MealPlanDialogProps) => {
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Batal
             </Button>
-            <Button type="submit" disabled={mutation.isLoading}>
-              {mutation.isLoading ? 'Menyimpan...' : 'Simpan'}
+            <Button type="submit" disabled={mutation.isPending}>
+              {mutation.isPending ? 'Menyimpan...' : 'Simpan'}
             </Button>
           </div>
         </form>
