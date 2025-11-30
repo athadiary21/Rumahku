@@ -125,19 +125,10 @@ export const MealPlanDialog = ({ mealPlan, trigger }: MealPlanDialogProps) => {
       return;
     }
 
-    // Validasi recipeId (harus number atau null)
-    let recipeIdValue: number | null = null;
-    if (recipeId) {
-      const parsed = Number(recipeId);
-      if (isNaN(parsed)) {
-        toast({
-          title: 'Error',
-          description: 'Resep tidak valid',
-          variant: 'destructive',
-        });
-        return;
-      }
-      recipeIdValue = parsed;
+    // Validasi recipeId (harus UUID string atau null)
+    let recipeIdValue: string | null = null;
+    if (recipeId && recipeId !== '') {
+      recipeIdValue = recipeId;
     }
 
     // Siapkan data sesuai skema Supabase
