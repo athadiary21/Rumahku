@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
@@ -61,151 +62,153 @@ const queryClient = new QueryClient({
 const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <SubscriptionProvider>
-          <LanguageProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <PWAInstallPrompt />
-              <BrowserRouter>
-                <PageTracker />
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route 
-                    path="/install" 
-                    element={
-                      <Suspense fallback={<PageLoader message="Memuat halaman..." />}>
-                        <Install />
-                      </Suspense>
-                    } 
-                  />
-                  <Route 
-                    path="/dashboard" 
-                    element={
-                      <ProtectedRoute>
-                        <Suspense fallback={<PageLoader message="Memuat dashboard..." />}>
-                          <Dashboard />
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <AuthProvider>
+          <SubscriptionProvider>
+            <LanguageProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <PWAInstallPrompt />
+                <BrowserRouter>
+                  <PageTracker />
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route 
+                      path="/install" 
+                      element={
+                        <Suspense fallback={<PageLoader message="Memuat halaman..." />}>
+                          <Install />
                         </Suspense>
-                      </ProtectedRoute>
-                    }
-                  >
-                    <Route index element={
-                      <Suspense fallback={<PageLoader />}>
-                        <DashboardHome />
-                      </Suspense>
-                    } />
-                    <Route path="calendar" element={
-                      <Suspense fallback={<PageLoader message="Memuat kalender..." />}>
-                        <CalendarPage />
-                      </Suspense>
-                    } />
-                    <Route path="kitchen" element={
-                      <Suspense fallback={<PageLoader message="Memuat dapur..." />}>
-                        <KitchenPage />
-                      </Suspense>
-                    } />
-                    <Route path="finance" element={
-                      <Suspense fallback={<PageLoader message="Memuat keuangan..." />}>
-                        <FinancePage />
-                      </Suspense>
-                    } />
-                    <Route path="vault" element={
-                      <Suspense fallback={<PageLoader message="Memuat vault..." />}>
-                        <VaultPage />
-                      </Suspense>
-                    } />
-                    <Route path="family" element={
-                      <Suspense fallback={<PageLoader message="Memuat keluarga..." />}>
-                        <FamilyPage />
-                      </Suspense>
-                    } />
-                    <Route path="settings" element={
-                      <Suspense fallback={<PageLoader message="Memuat pengaturan..." />}>
-                        <SettingsPage />
-                      </Suspense>
-                    } />
-                  </Route>
-                  <Route 
-                    path="/admin" 
-                    element={
-                      <ProtectedRoute>
-                        <Suspense fallback={<PageLoader message="Memuat admin panel..." />}>
-                          <AdminLayout />
+                      } 
+                    />
+                    <Route 
+                      path="/dashboard" 
+                      element={
+                        <ProtectedRoute>
+                          <Suspense fallback={<PageLoader message="Memuat dashboard..." />}>
+                            <Dashboard />
+                          </Suspense>
+                        </ProtectedRoute>
+                      }
+                    >
+                      <Route index element={
+                        <Suspense fallback={<PageLoader />}>
+                          <DashboardHome />
                         </Suspense>
-                      </ProtectedRoute>
-                    }
-                  >
-                    <Route index element={
-                      <Suspense fallback={<PageLoader />}>
-                        <AdminDashboard />
-                      </Suspense>
-                    } />
-                    <Route path="content" element={
-                      <Suspense fallback={<PageLoader />}>
-                        <WebsiteContent />
-                      </Suspense>
-                    } />
-                    <Route path="testimonials" element={
-                      <Suspense fallback={<PageLoader />}>
-                        <TestimonialsAdmin />
-                      </Suspense>
-                    } />
-                    <Route path="faqs" element={
-                      <Suspense fallback={<PageLoader />}>
-                        <FAQsAdmin />
-                      </Suspense>
-                    } />
-                    <Route path="pricing" element={
-                      <Suspense fallback={<PageLoader />}>
-                        <PricingAdmin />
-                      </Suspense>
-                    } />
-                    <Route path="users" element={
-                      <Suspense fallback={<PageLoader />}>
-                        <UsersManagement />
-                      </Suspense>
-                    } />
-                    <Route path="users/:userId" element={
-                      <Suspense fallback={<PageLoader />}>
-                        <UserDetails />
-                      </Suspense>
-                    } />
-                    <Route path="subscriptions" element={
-                      <Suspense fallback={<PageLoader />}>
-                        <SubscriptionsManagement />
-                      </Suspense>
-                    } />
-                    <Route path="promo-codes" element={
-                      <Suspense fallback={<PageLoader />}>
-                        <PromoCodesAdmin />
-                      </Suspense>
-                    } />
-                    <Route path="activity-logs" element={
-                      <Suspense fallback={<PageLoader />}>
-                        <ActivityLogs />
-                      </Suspense>
-                    } />
-                    <Route path="traffic-logs" element={
-                      <Suspense fallback={<PageLoader />}>
-                        <TrafficLogs />
-                      </Suspense>
-                    } />
-                    <Route path="transactions" element={
-                      <Suspense fallback={<PageLoader />}>
-                        <PaymentTransactions />
-                      </Suspense>
-                    } />
-                  </Route>
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </BrowserRouter>
-            </TooltipProvider>
-          </LanguageProvider>
-        </SubscriptionProvider>
-      </AuthProvider>
+                      } />
+                      <Route path="calendar" element={
+                        <Suspense fallback={<PageLoader message="Memuat kalender..." />}>
+                          <CalendarPage />
+                        </Suspense>
+                      } />
+                      <Route path="kitchen" element={
+                        <Suspense fallback={<PageLoader message="Memuat dapur..." />}>
+                          <KitchenPage />
+                        </Suspense>
+                      } />
+                      <Route path="finance" element={
+                        <Suspense fallback={<PageLoader message="Memuat keuangan..." />}>
+                          <FinancePage />
+                        </Suspense>
+                      } />
+                      <Route path="vault" element={
+                        <Suspense fallback={<PageLoader message="Memuat vault..." />}>
+                          <VaultPage />
+                        </Suspense>
+                      } />
+                      <Route path="family" element={
+                        <Suspense fallback={<PageLoader message="Memuat keluarga..." />}>
+                          <FamilyPage />
+                        </Suspense>
+                      } />
+                      <Route path="settings" element={
+                        <Suspense fallback={<PageLoader message="Memuat pengaturan..." />}>
+                          <SettingsPage />
+                        </Suspense>
+                      } />
+                    </Route>
+                    <Route 
+                      path="/admin" 
+                      element={
+                        <ProtectedRoute>
+                          <Suspense fallback={<PageLoader message="Memuat admin panel..." />}>
+                            <AdminLayout />
+                          </Suspense>
+                        </ProtectedRoute>
+                      }
+                    >
+                      <Route index element={
+                        <Suspense fallback={<PageLoader />}>
+                          <AdminDashboard />
+                        </Suspense>
+                      } />
+                      <Route path="content" element={
+                        <Suspense fallback={<PageLoader />}>
+                          <WebsiteContent />
+                        </Suspense>
+                      } />
+                      <Route path="testimonials" element={
+                        <Suspense fallback={<PageLoader />}>
+                          <TestimonialsAdmin />
+                        </Suspense>
+                      } />
+                      <Route path="faqs" element={
+                        <Suspense fallback={<PageLoader />}>
+                          <FAQsAdmin />
+                        </Suspense>
+                      } />
+                      <Route path="pricing" element={
+                        <Suspense fallback={<PageLoader />}>
+                          <PricingAdmin />
+                        </Suspense>
+                      } />
+                      <Route path="users" element={
+                        <Suspense fallback={<PageLoader />}>
+                          <UsersManagement />
+                        </Suspense>
+                      } />
+                      <Route path="users/:userId" element={
+                        <Suspense fallback={<PageLoader />}>
+                          <UserDetails />
+                        </Suspense>
+                      } />
+                      <Route path="subscriptions" element={
+                        <Suspense fallback={<PageLoader />}>
+                          <SubscriptionsManagement />
+                        </Suspense>
+                      } />
+                      <Route path="promo-codes" element={
+                        <Suspense fallback={<PageLoader />}>
+                          <PromoCodesAdmin />
+                        </Suspense>
+                      } />
+                      <Route path="activity-logs" element={
+                        <Suspense fallback={<PageLoader />}>
+                          <ActivityLogs />
+                        </Suspense>
+                      } />
+                      <Route path="traffic-logs" element={
+                        <Suspense fallback={<PageLoader />}>
+                          <TrafficLogs />
+                        </Suspense>
+                      } />
+                      <Route path="transactions" element={
+                        <Suspense fallback={<PageLoader />}>
+                          <PaymentTransactions />
+                        </Suspense>
+                      } />
+                    </Route>
+                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </BrowserRouter>
+              </TooltipProvider>
+            </LanguageProvider>
+          </SubscriptionProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   </ErrorBoundary>
 );

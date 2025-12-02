@@ -17,11 +17,15 @@ import {
   Menu,
   ShieldCheck
 } from 'lucide-react';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  useKeyboardShortcuts();
 
   // Check if user is admin
   const { data: isAdmin } = useQuery({
@@ -79,11 +83,15 @@ const Dashboard = () => {
         ))}
       </nav>
 
-      <div className="p-4 border-t">
+      <div className="p-4 border-t space-y-2">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm text-muted-foreground">Tema</span>
+          <ThemeToggle />
+        </div>
         {isAdmin && (
           <Button 
             variant="outline" 
-            className="w-full justify-start mb-2" 
+            className="w-full justify-start" 
             onClick={() => navigate('/admin')}
           >
             <ShieldCheck className="mr-3 h-5 w-5" />
@@ -108,16 +116,19 @@ const Dashboard = () => {
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-card border-b p-4 flex items-center justify-between">
         <h1 className="text-xl font-bold text-primary">RumahKu</h1>
-        <Sheet>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <Sheet>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon">
               <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-64 p-0">
-            <SidebarContent />
-          </SheetContent>
-        </Sheet>
+            <SheetContent side="left" className="w-64 p-0">
+              <SidebarContent />
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
 
       {/* Main Content */}
@@ -126,6 +137,9 @@ const Dashboard = () => {
           <Outlet />
         </div>
       </main>
+
+      {/* Onboarding Tour */}
+      <OnboardingTour />
     </div>
   );
 };

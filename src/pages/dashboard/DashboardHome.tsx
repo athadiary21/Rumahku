@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useFamily } from '@/hooks/useFamily';
+import { DashboardCardSkeleton } from '@/components/ui/skeletons';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 
@@ -19,7 +20,7 @@ const DashboardHome = () => {
   const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
 
   // Query untuk events minggu ini
-  const { data: weekEvents = [] } = useQuery({
+  const { data: weekEvents = [], isLoading: eventsLoading } = useQuery({
     queryKey: ['week-events', familyData?.family_id],
     queryFn: async () => {
       if (!familyData?.family_id) return [];
@@ -37,7 +38,7 @@ const DashboardHome = () => {
   });
 
   // Query untuk budget terpakai minggu ini
-  const { data: budgetSpent = 0 } = useQuery({
+  const { data: budgetSpent = 0, isLoading: budgetLoading } = useQuery({
     queryKey: ['budget-spent', familyData?.family_id],
     queryFn: async () => {
       if (!familyData?.family_id) return 0;
@@ -55,7 +56,7 @@ const DashboardHome = () => {
   });
 
   // Query untuk dokumen tersimpan
-  const { data: documentCount = 0 } = useQuery({
+  const { data: documentCount = 0, isLoading: docsLoading } = useQuery({
     queryKey: ['document-count', familyData?.family_id],
     queryFn: async () => {
       if (!familyData?.family_id) return 0;
@@ -136,24 +137,32 @@ const DashboardHome = () => {
           <CardDescription>Ringkasan aktivitas keluarga Anda minggu ini</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-muted rounded-lg">
-              <p className="text-2xl font-bold">{weekEvents.length}</p>
-              <p className="text-sm text-muted-foreground">Event Minggu Ini</p>
+          {(eventsLoading || budgetLoading || docsLoading) ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <DashboardCardSkeleton />
+              <DashboardCardSkeleton />
+              <DashboardCardSkeleton />
             </div>
-            <div className="text-center p-4 bg-muted rounded-lg">
-              <p className="text-2xl font-bold">
-                {typeof budgetSpent === 'number' 
-                  ? `Rp ${budgetSpent.toLocaleString('id-ID')}` 
-                  : 'Rp 0'}
-              </p>
-              <p className="text-sm text-muted-foreground">Budget Terpakai</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="text-center p-4 bg-muted rounded-lg">
+                <p className="text-2xl font-bold">{weekEvents.length}</p>
+                <p className="text-sm text-muted-foreground">Event Minggu Ini</p>
+              </div>
+              <div className="text-center p-4 bg-muted rounded-lg">
+                <p className="text-2xl font-bold">
+                  {typeof budgetSpent === 'number' 
+                    ? `Rp ${budgetSpent.toLocaleString('id-ID')}` 
+                    : 'Rp 0'}
+                </p>
+                <p className="text-sm text-muted-foreground">Budget Terpakai</p>
+              </div>
+              <div className="text-center p-4 bg-muted rounded-lg">
+                <p className="text-2xl font-bold">{documentCount}</p>
+                <p className="text-sm text-muted-foreground">Dokumen Tersimpan</p>
+              </div>
             </div>
-            <div className="text-center p-4 bg-muted rounded-lg">
-              <p className="text-2xl font-bold">{documentCount}</p>
-              <p className="text-sm text-muted-foreground">Dokumen Tersimpan</p>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>
