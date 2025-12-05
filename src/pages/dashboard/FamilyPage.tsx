@@ -3,7 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Users, UserPlus, Crown, Trash2, User } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Users, UserPlus, Crown, Trash2, User, Pencil, Check, X, Loader2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useFamily } from '@/hooks/useFamily';
@@ -20,11 +22,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface FamilyMember {
   id: string;
   user_id: string;
-  role: string;
+  role: 'admin' | 'member' | 'child';
   joined_at: string;
   profiles: {
     full_name: string | null;
@@ -33,7 +42,9 @@ interface FamilyMember {
 
 const FamilyPage = () => {
   const [memberToRemove, setMemberToRemove] = useState<FamilyMember | null>(null);
-  const { data: familyData } = useFamily();
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState('');
+  const { data: familyData, refetch: refetchFamily } = useFamily();
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -71,6 +82,59 @@ const FamilyPage = () => {
   const currentUserMember = members.find(m => m.user_id === user?.id);
   const isAdmin = currentUserMember?.role === 'admin';
 
+  // Update family name mutation
+  const updateFamilyNameMutation = useMutation({
+    mutationFn: async (newName: string) => {
+      const { error } = await supabase
+        .from('family_groups')
+        .update({ name: newName })
+        .eq('id', familyId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      refetchFamily();
+      toast({
+        title: 'Berhasil',
+        description: 'Nama keluarga berhasil diubah',
+      });
+      setIsEditingName(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Gagal mengubah nama keluarga',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Update member role mutation
+  const updateMemberRoleMutation = useMutation({
+    mutationFn: async ({ memberId, newRole }: { memberId: string; newRole: 'admin' | 'member' | 'child' }) => {
+      const { error } = await supabase
+        .from('family_members')
+        .update({ role: newRole })
+        .eq('id', memberId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['family-members'] });
+      toast({
+        title: 'Berhasil',
+        description: 'Role anggota berhasil diubah',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Gagal mengubah role anggota',
+        variant: 'destructive',
+      });
+    },
+  });
+
   // Remove member mutation
   const removeMemberMutation = useMutation({
     mutationFn: async (memberId: string) => {
@@ -104,6 +168,28 @@ const FamilyPage = () => {
     }
   };
 
+  const handleStartEditName = () => {
+    setEditedName(familyName);
+    setIsEditingName(true);
+  };
+
+  const handleSaveName = () => {
+    if (editedName.trim() && editedName !== familyName) {
+      updateFamilyNameMutation.mutate(editedName.trim());
+    } else {
+      setIsEditingName(false);
+    }
+  };
+
+  const handleCancelEditName = () => {
+    setIsEditingName(false);
+    setEditedName('');
+  };
+
+  const handleRoleChange = (memberId: string, newRole: 'admin' | 'member' | 'child') => {
+    updateMemberRoleMutation.mutate({ memberId, newRole });
+  };
+
   const getInitials = (name: string | null) => {
     if (name) {
       return name
@@ -133,6 +219,15 @@ const FamilyPage = () => {
       return <Badge variant="outline">Anak</Badge>;
     }
     return <Badge variant="secondary">Member</Badge>;
+  };
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case 'admin': return 'Admin';
+      case 'member': return 'Member';
+      case 'child': return 'Anak';
+      default: return 'Member';
+    }
   };
 
   return (
@@ -198,11 +293,10 @@ const FamilyPage = () => {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <p className="font-medium truncate">
                           {getDisplayName(member)}
                         </p>
-                        {getRoleBadge(member.role)}
                         {member.user_id === user?.id && (
                           <Badge variant="outline" className="text-xs">Anda</Badge>
                         )}
@@ -219,16 +313,46 @@ const FamilyPage = () => {
                         })}
                       </p>
                     </div>
-                    {isAdmin && member.user_id !== user?.id && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setMemberToRemove(member)}
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
+                    
+                    {/* Role selector for admin */}
+                    <div className="flex items-center gap-2">
+                      {isAdmin && member.user_id !== user?.id ? (
+                        <Select
+                          value={member.role}
+                          onValueChange={(value: 'admin' | 'member' | 'child') => 
+                            handleRoleChange(member.id, value)
+                          }
+                          disabled={updateMemberRoleMutation.isPending}
+                        >
+                          <SelectTrigger className="w-[120px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="admin">
+                              <div className="flex items-center gap-2">
+                                <Crown className="h-3 w-3" />
+                                Admin
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="member">Member</SelectItem>
+                            <SelectItem value="child">Anak</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        getRoleBadge(member.role)
+                      )}
+                      
+                      {isAdmin && member.user_id !== user?.id && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setMemberToRemove(member)}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -244,8 +368,56 @@ const FamilyPage = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Nama Keluarga</p>
-                <p className="font-medium">{familyName}</p>
+                <Label className="text-sm text-muted-foreground">Nama Keluarga</Label>
+                {isEditingName ? (
+                  <div className="flex items-center gap-2 mt-1">
+                    <Input
+                      value={editedName}
+                      onChange={(e) => setEditedName(e.target.value)}
+                      className="h-8"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSaveName();
+                        if (e.key === 'Escape') handleCancelEditName();
+                      }}
+                    />
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8"
+                      onClick={handleSaveName}
+                      disabled={updateFamilyNameMutation.isPending}
+                    >
+                      {updateFamilyNameMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Check className="h-4 w-4 text-green-500" />
+                      )}
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8"
+                      onClick={handleCancelEditName}
+                    >
+                      <X className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="font-medium">{familyName}</p>
+                    {isAdmin && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-6 w-6"
+                        onClick={handleStartEditName}
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Total Anggota</p>
