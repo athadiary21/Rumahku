@@ -104,12 +104,12 @@ export const TaskDialog = ({ open, onOpenChange, task }: TaskDialogProps) => {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Ditugaskan Kepada</Label>
-              <Select value={assignedTo} onValueChange={setAssignedTo}>
+              <Select value={assignedTo || "unassigned"} onValueChange={(v) => setAssignedTo(v === "unassigned" ? "" : v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih anggota" />
                 </SelectTrigger>
                 <SelectContent>
-                <SelectItem value="">Belum ditugaskan</SelectItem>
+                  <SelectItem value="unassigned">Belum ditugaskan</SelectItem>
                   {members?.map((member) => (
                     <SelectItem key={member.user_id} value={member.user_id}>
                       {member.profile?.full_name || 'Anggota'}
